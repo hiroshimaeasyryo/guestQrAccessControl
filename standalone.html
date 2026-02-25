@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>株式会社ワークアズライフ ゲスト入退室記録 (GitHub Pages 版)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            /* Colors */
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --success: #10B981;
+            --error: #EF4444;
+            --bg: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-main: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+
+            /* Spacing */
+            --gap: 16px;
+
+            /* Radius */
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            width: 100vw !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            width: 100% !important;
+            max-width: 420px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        header span {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card.active {
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-title.active {
+            color: var(--primary);
+        }
+
+        .guest-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .guest-btn {
+            background: #F3F4F6;
+            border: 2px solid transparent;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        .guest-btn .guest-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .guest-btn .guest-company {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            font-weight: 400;
+        }
+
+        .guest-btn .guest-time {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .guest-btn:active {
+            transform: scale(0.98);
+        }
+
+        .guest-btn.selected {
+            background: #EEF2FF;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .guest-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-group label span {
+            font-size: 0.75rem;
+            color: var(--error);
+            margin-left: 4px;
+        }
+
+        .form-group label .optional {
+            color: var(--text-sub);
+        }
+
+        .guest-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .guest-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .guest-input::placeholder {
+            color: #D1D5DB;
+        }
+
+        .type-switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .type-btn {
+            padding: 20px 16px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .type-btn:not(.active) {
+            animation: pulse 2.5s infinite ease-in-out;
+        }
+
+        .type-btn.active[data-type="in"] {
+            border-color: #10B981;
+            background-color: #ECFDF5;
+            color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .type-btn.active[data-type="out"] {
+            border-color: #F59E0B;
+            background-color: #FFFBEB;
+            color: #D97706;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        }
+
+        .type-btn.active {
+            animation: none;
+        }
+
+        .type-icon {
+            font-size: 1.8rem;
+        }
+
+        .camera-box {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            top: 0;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scan-line.active {
+            opacity: 1;
+            animation: scanAnim 2.5s infinite linear;
+        }
+
+        @keyframes scanAnim {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.2);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(17, 24, 39, 0.95);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.success {
+            background: var(--success);
+        }
+
+        #toast.error {
+            background: var(--error);
+        }
+
+        .disabled-section {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(80%);
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ddd;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: auto;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <img src="https://lh3.google.com/u/0/d/1YkdqM2adcpxtVM-nA8uVGGGPi2WYPkRu" alt="Logo" class="logo">
+            <h1>株式会社ワークアズライフ</h1>
+            <span>東京オフィス 入退室記録システム</span>
+        </header>
+
+        <!-- STEP 1: SELECT MODE -->
+        <section class="card active" id="sec-mode">
+            <div class="card-title active">STEP 1: 入室または退室を選択</div>
+            <div class="type-switcher" id="typeSwitcher">
+                <div class="type-btn" data-type="in" onclick="selectMode('in')">
+                    <span class="type-icon"><i class="fa-solid fa-door-open"></i></span>
+                    <span>入室する</span>
+                </div>
+                <div class="type-btn" data-type="out" onclick="selectMode('out')">
+                    <span class="type-icon"><i class="fa-solid fa-door-closed"></i></span>
+                    <span>退室する</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: INPUT / SELECT -->
+        <section class="card disabled-section" id="sec-input">
+            <div class="card-title" id="inputTitle">STEP 2: 情報を入力</div>
+
+            <!-- Entry Form -->
+            <div id="entryForm" class="guest-form" style="display: none;">
+                <div class="form-group">
+                    <label>会社名 <span class="optional">(任意)</span></label>
+                    <input type="text" id="companyInput" class="guest-input" placeholder="株式会社〇〇" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>氏名 <span>(必須)</span></label>
+                    <input type="text" id="nameInput" class="guest-input" placeholder="山田 太郎" autocomplete="off">
+                </div>
+                <button class="type-btn"
+                    style="width: 100%; margin-top: 8px; animation: none; padding: 12px; border-color: var(--primary); color: var(--primary);"
+                    onclick="proceedToScan()">
+                    次へ進む
+                </button>
+            </div>
+
+            <!-- Exit Selection -->
+            <div id="exitSelection" style="display: none;">
+                <div style="text-align: center; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-sub);">
+                    お名前を選択してください
+                </div>
+                <div class="guest-grid" id="guestGrid">
+                    <div style="text-align: center; padding: 20px; color: var(--text-sub);">
+                        <div class="spinner"></div> 読み込み中...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3: SCAN -->
+        <section class="card disabled-section" id="sec-scan">
+            <div class="card-title">STEP 3: QRスキャンで確定</div>
+            <div class="camera-box">
+                <video id="video" autoplay muted playsinline></video>
+                <div class="scan-line" id="scanLine"></div>
+            </div>
+            <div id="scanStatus"
+                style="text-align: center; margin-top: 12px; font-weight: bold; height: 1.2em; font-size: 0.9rem;">
+            </div>
+        </section>
+
+        <footer>
+            &copy; <span id="currentYear"></span> Work As Life Inc. All Rights Reserved.
+        </footer>
+    </div>
+
+    <div id="toast">
+        <span id="toastIcon"></span>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        // --- Configuration ---
+        // ここにデプロイした GAS のウェブアプリ URL を入力してください
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzDGmOqIZCJBM2iv68hjoFnjYcXK_nDKIygHifOGdnY_zNVunqmOe_eyld_PtYv04Kc7w/exec";
+
+        // UI Refs
+        const secMode = document.getElementById('sec-mode');
+        const secInput = document.getElementById('sec-input');
+        const secScan = document.getElementById('sec-scan');
+        const inputTitle = document.getElementById('inputTitle');
+        const entryForm = document.getElementById('entryForm');
+        const exitSelection = document.getElementById('exitSelection');
+        const guestGrid = document.getElementById('guestGrid');
+        const companyInput = document.getElementById('companyInput');
+        const nameInput = document.getElementById('nameInput');
+        const typeBtns = document.querySelectorAll('.type-btn');
+        const video = document.getElementById('video');
+        const scanLine = document.getElementById('scanLine');
+        const scanStatus = document.getElementById('scanStatus');
+        const currentYearEl = document.getElementById('currentYear');
+
+        // State
+        let selectedMode = null; // 'in' or 'out'
+        let selectedName = '';
+        let selectedCompany = '';
+        let scanning = false;
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            currentYearEl.textContent = new Date().getFullYear();
+        });
+
+        // --- JSONP Helper ---
+        function callGas(action, params = {}) {
+            return new Promise((resolve, reject) => {
+                if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL === "YOUR_GAS_WEBAPP_URL") {
+                    reject(new Error("GAS_WEBAPP_URL が設定されていません。"));
+                    return;
+                }
+
+                const callbackName = 'gasCB_' + Date.now() + Math.floor(Math.random() * 1000);
+                const url = new URL(GAS_WEBAPP_URL);
+                url.searchParams.append('action', action);
+                url.searchParams.append('callback', callbackName);
+
+                Object.entries(params).forEach(([k, v]) => {
+                    if (v !== undefined && v !== null) {
+                        url.searchParams.append(k, v);
+                    }
+                });
+
+                const script = document.createElement('script');
+                script.id = callbackName;
+
+                // タイムアウト処理
+                const timeout = setTimeout(() => {
+                    cleanup();
+                    reject(new Error("通信がタイムアウトしました。"));
+                }, 15000);
+
+                function cleanup() {
+                    clearTimeout(timeout);
+                    delete window[callbackName];
+                    const s = document.getElementById(callbackName);
+                    if (s) document.body.removeChild(s);
+                }
+
+                window[callbackName] = (data) => {
+                    cleanup();
+                    resolve(data);
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error("ネットワークエラーが発生しました。"));
+                };
+
+                script.src = url.toString();
+                document.body.appendChild(script);
+            });
+        }
+
+        // --- STEP 1: Select Mode ---
+        function selectMode(mode) {
+            selectedMode = mode;
+
+            typeBtns.forEach(btn => {
+                if (btn.dataset.type === mode) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            selectedName = '';
+            selectedCompany = '';
+            companyInput.value = '';
+            nameInput.value = '';
+
+            secScan.classList.add('disabled-section');
+            stopCamera();
+
+            secInput.classList.remove('disabled-section');
+            if (mode === 'in') {
+                inputTitle.textContent = 'STEP 2: ご来客者様情報を入力';
+                entryForm.style.display = 'block';
+                exitSelection.style.display = 'none';
+                scrollToEl(secInput);
+                setTimeout(() => companyInput.focus(), 600);
+            } else {
+                inputTitle.textContent = 'STEP 2: お名前を選択';
+                entryForm.style.display = 'none';
+                exitSelection.style.display = 'block';
+                loadStayGuestList();
+                scrollToEl(secInput);
+            }
+        }
+
+        // --- STEP 2: Input / Select ---
+        function proceedToScan() {
+            const name = nameInput.value.trim();
+            if (!name) {
+                showToast('お名前を入力してください', 'error');
+                nameInput.focus();
+                return;
+            }
+            selectedName = name;
+            selectedCompany = companyInput.value.trim();
+
+            secScan.classList.remove('disabled-section');
+            scrollToEl(secScan);
+            startCamera();
+        }
+
+        async function loadStayGuestList() {
+            guestGrid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);"><div class="spinner"></div> 読み込み中...</div>';
+
+            try {
+                const list = await callGas('getStayGuestList');
+                renderGuestList(list);
+            } catch (err) {
+                guestGrid.innerHTML = '<div style="color:red; text-align:center;">エラー: ' + err.message + '</div>';
+                showToast(err.message, 'error');
+            }
+        }
+
+        function renderGuestList(list) {
+            guestGrid.innerHTML = '';
+            if (!list || list.length === 0) {
+                guestGrid.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-sub);">現在、入室中のゲストはいません</div>';
+                return;
+            }
+            list.forEach((guest) => {
+                const btn = document.createElement('div');
+                btn.className = 'guest-btn';
+
+                const info = document.createElement('div');
+                info.className = 'guest-info';
+
+                const namePart = document.createElement('div');
+                namePart.textContent = guest.name + ' 様';
+
+                if (guest.company) {
+                    const compPart = document.createElement('div');
+                    compPart.className = 'guest-company';
+                    compPart.textContent = guest.company;
+                    info.appendChild(compPart);
+                }
+                info.appendChild(namePart);
+
+                const timePart = document.createElement('div');
+                timePart.className = 'guest-time';
+                timePart.textContent = guest.entryTime + '〜';
+
+                btn.appendChild(info);
+                btn.appendChild(timePart);
+
+                btn.onclick = () => {
+                    document.querySelectorAll('.guest-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedName = guest.name;
+                    selectedCompany = guest.company;
+
+                    secScan.classList.remove('disabled-section');
+                    scrollToEl(secScan);
+                    startCamera();
+                };
+                guestGrid.appendChild(btn);
+            });
+        }
+
+        // --- STEP 3: Scan ---
+        function startCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                scanStatus.textContent = "カメラが使えません";
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then((stream) => {
+                    video.srcObject = stream;
+                    video.play();
+                    scanning = true;
+                    scanLine.classList.add('active');
+                    scanStatus.textContent = "QRコードを読み取ってください";
+                    requestAnimationFrame(tick);
+                })
+                .catch(err => {
+                    scanStatus.textContent = "カメラエラー: " + err.message;
+                });
+        }
+
+        function stopCamera() {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+            scanning = false;
+            scanLine.classList.remove('active');
+        }
+
+        function tick() {
+            if (!scanning) return;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                if (code) {
+                    handleQrCode(code.data);
+                    return; // ループを抜ける
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+
+        async function handleQrCode(qrData) {
+            scanning = false;
+            stopCamera();
+            scanStatus.textContent = "送信中...";
+
+            const params = {
+                name: selectedName,
+                company: selectedCompany,
+                type: selectedMode,
+                qrValue: qrData
+            };
+
+            try {
+                const res = await callGas('recordGuestTimestamp', params);
+                if (res.ok) {
+                    showToast(res.message, 'success');
+                    scanStatus.textContent = "完了！";
+                    setTimeout(() => resetApp(), 3000);
+                } else {
+                    showToast('失敗: ' + (res.message || '不明なエラー'), 'error');
+                    setTimeout(() => startCamera(), 2000);
+                }
+            } catch (err) {
+                showToast('エラー: ' + err.message, 'error');
+                setTimeout(() => startCamera(), 2000);
+            }
+        }
+
+        // --- Helpers ---
+        function scrollToEl(el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            const m = document.getElementById('toastMsg');
+            const i = document.getElementById('toastIcon');
+
+            m.textContent = msg;
+            t.className = type === 'success' ? 'success' : 'error';
+            i.innerHTML = type === 'success' ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>';
+            t.classList.add('show');
+
+            setTimeout(() => t.classList.remove('show'), 4000);
+        }
+
+        function resetApp() {
+            selectedMode = null;
+            selectedName = '';
+            selectedCompany = '';
+            scanning = false;
+
+            secInput.classList.add('disabled-section');
+            secScan.classList.add('disabled-section');
+            typeBtns.forEach(btn => btn.classList.remove('active'));
+            companyInput.value = '';
+            nameInput.value = '';
+            entryForm.style.display = 'none';
+            exitSelection.style.display = 'none';
+            scanStatus.textContent = '';
+
+            stopCamera();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+
+</html>
