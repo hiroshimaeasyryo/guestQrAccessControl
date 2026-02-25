@@ -34,8 +34,9 @@ function doGet(e) {
     const output = JSON.stringify(result);
     const callback = e.parameter.callback;
     if (callback) {
-      // JSONP レスポンス
-      return ContentService.createTextOutput(callback + '(' + output + ')')
+      // JSONP レスポンス（モバイルChromeのCORB対策として厳格なJSとして返す）
+      // Google Apps Scriptの ContentService.MimeType.JAVASCRIPT は "application/javascript" を返す
+      return ContentService.createTextOutput(callback + '(' + output + ');')
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
     }
     // 通常の JSON レスポンス
