@@ -537,55 +537,51 @@
 
         // --- JSONP Helper ---
         function callGas(action, params = {}) {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL === "YOUR_GAS_WEBAPP_URL") {
                     reject(new Error("GAS_WEBAPP_URL が設定されていません。"));
                     return;
                 }
 
-                const callbackName = 'gasCB_' + Date.now() + Math.floor(Math.random() * 1000);
-                const url = new URL(GAS_WEBAPP_URL);
-                url.searchParams.append('action', action);
-                url.searchParams.append('callback', callbackName);
+                try {
+                    // Fetch POST用のデータ形式 (application/x-www-form-urlencoded) を作成する
+                    const formData = new URLSearchParams();
+                    formData.append('action', action);
 
-                Object.entries(params).forEach(([k, v]) => {
-                    if (v !== undefined && v !== null) {
-                        // モバイル対策1: データ（特に日本語やQRコードの中身）を安全にURLエンコードする
-                        url.searchParams.append(k, encodeURIComponent(v));
+                    // 値は自動的にURLエンコードされるので、元の値をそのまま渡す（二重エンコード防止）
+                    Object.entries(params).forEach(([k, v]) => {
+                        if (v !== undefined && v !== null) {
+                            formData.append(k, v);
+                        }
+                    });
+
+                    // タイムアウト処理 (AbortController)
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                    const response = await fetch(GAS_WEBAPP_URL, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
                     }
-                });
 
-                // モバイル対策2: キャッシュを強制回避するため、ランダムなタイムスタンプパラメータを付与
-                url.searchParams.append('_t', Date.now().toString());
-
-                const script = document.createElement('script');
-                script.id = callbackName;
-
-                // タイムアウト処理
-                const timeout = setTimeout(() => {
-                    cleanup();
-                    reject(new Error("通信がタイムアウトしました。"));
-                }, 15000);
-
-                function cleanup() {
-                    clearTimeout(timeout);
-                    delete window[callbackName];
-                    const s = document.getElementById(callbackName);
-                    if (s) document.body.removeChild(s);
-                }
-
-                window[callbackName] = (data) => {
-                    cleanup();
+                    const data = await response.json();
                     resolve(data);
-                };
 
-                script.onerror = (e) => {
-                    cleanup();
-                    // アプローチB: エラー時の詳細を画面に表示するための加工
-                    const urlStr = url.toString();
-                    const urlLength = urlStr.length;
-                    const dbgMsg = `NetErr! URL長:${urlLength} param数:${Object.keys(params).length}`;
-                    reject(new Error(dbgMsg));
+                } catch (error) {
+                    // タイムアウトやネットワークエラー時の処理
+                    let dbgMsg = "NetErr! (Fetch API) param数:" + Object.keys(params).length;
+                    if (error.name === 'AbortError') {
+                        dbgMsg = "通信がタイムアウトしました。";
+                    } else if (error.message) {
+                        dbgMsg += ` [${error.message}]`;
+                    }
 
                     // 恒久的なデバッグエリアに追記して表示
                     const debugLog = document.getElementById('debugLog');
@@ -593,18 +589,16 @@
                     if (debugLog && debugText) {
                         debugLog.style.display = 'block';
                         const time = new Date().toLocaleTimeString();
-                        debugText.innerHTML = `[${time}] ${dbgMsg}<br><textarea style="width:100%;height:60px;margin-top:4px;font-size:10px;" readonly>${urlStr}</textarea><br>` + debugText.innerHTML;
+                        debugText.innerHTML = `[${time}] ${dbgMsg}<br>` + debugText.innerHTML;
                     }
 
                     const statusEl = document.getElementById('scanStatus');
                     if (statusEl) {
                         statusEl.style.color = "red";
-                        statusEl.textContent = "ネットワークエラーが発生しました（下部詳細）";
+                        statusEl.textContent = "通信エラーが発生しました（下部詳細）";
                     }
-                };
-
-                script.src = url.toString();
-                document.body.appendChild(script);
+                    reject(new Error(dbgMsg));
+                }
             });
         }
 

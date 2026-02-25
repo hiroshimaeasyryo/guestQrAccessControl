@@ -5,43 +5,8 @@ const STAY_SHEET_NAME = '現在入室中';
  * メイン画面表示 / API エンドポイント
  */
 function doGet(e) {
-  const action = e.parameter.action;
-
-  // API モードの処理
-  if (action) {
-    let result = {};
-    try {
-      switch (action) {
-        case 'getStayGuestList':
-          result = getStayGuestList();
-          break;
-        case 'recordGuestTimestamp':
-          const payload = {
-            name: e.parameter.name,
-            company: e.parameter.company,
-            type: e.parameter.type,
-            qrValue: e.parameter.qrValue
-          };
-          result = recordGuestTimestamp(payload);
-          break;
-        default:
-          result = { ok: false, message: 'Invalid action: ' + action };
-      }
-    } catch (err) {
-      result = { ok: false, message: err.message };
-    }
-
-    const output = JSON.stringify(result);
-    const callback = e.parameter.callback;
-    if (callback) {
-      // JSONP レスポンス（モバイルChromeのCORB対策として厳格なJSとして返す）
-      // Google Apps Scriptの ContentService.MimeType.JAVASCRIPT は "application/javascript" を返す
-      return ContentService.createTextOutput(callback + '(' + output + ');')
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
-    }
-    // 通常の JSON レスポンス
-    return ContentService.createTextOutput(output)
-      .setMimeType(ContentService.MimeType.JSON);
+  if (e.parameter.action) {
+    return handleApiRequest(e);
   }
 
   // 通常の HTML 表示モード
@@ -51,6 +16,55 @@ function doGet(e) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
     .setFaviconUrl('https://drive.google.com/uc?id=1YkdqM2adcpxtVM-nA8uVGGGPi2WYPkRu&.png')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * POSTリクエストを処理 (Fetch API用)
+ */
+function doPost(e) {
+  return handleApiRequest(e);
+}
+
+/**
+ * 共通のAPIリクエスト処理
+ */
+function handleApiRequest(e) {
+  const action = e.parameter.action;
+  let result = {};
+
+  try {
+    switch (action) {
+      case 'getStayGuestList':
+        result = getStayGuestList();
+        break;
+      case 'recordGuestTimestamp':
+        const payload = {
+          name: e.parameter.name,
+          company: e.parameter.company,
+          type: e.parameter.type,
+          qrValue: e.parameter.qrValue
+        };
+        result = recordGuestTimestamp(payload);
+        break;
+      default:
+        result = { ok: false, message: 'Invalid action: ' + action };
+    }
+  } catch (err) {
+    result = { ok: false, message: err.message };
+  }
+
+  const output = JSON.stringify(result);
+
+  // JSONPによるコールバック指定がある場合（後方互換用）
+  const callback = e.parameter.callback;
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + output + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  // Fetch API用の通常のJSONレスポンス (CORS対応で自動的にAccess-Control-Allow-Origin:*が付与される)
+  return ContentService.createTextOutput(output)
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
