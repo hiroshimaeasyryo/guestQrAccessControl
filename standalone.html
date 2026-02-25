@@ -568,9 +568,20 @@
                     resolve(data);
                 };
 
-                script.onerror = () => {
+                script.onerror = (e) => {
                     cleanup();
-                    reject(new Error("ネットワークエラーが発生しました。"));
+                    // アプローチB: エラー時の詳細を画面に表示するための加工
+                    const urlLength = url.toString().length;
+                    const dbgMsg = `NetErr! URL長:${urlLength} param数:${Object.keys(params).length}`;
+                    reject(new Error(dbgMsg));
+
+                    // 補助として強制的に画面下部ステータスにも表示させる（scanStatusが存在する場合）
+                    const statusEl = document.getElementById('scanStatus');
+                    if (statusEl) {
+                        statusEl.style.color = "red";
+                        statusEl.style.fontSize = "0.75rem";
+                        statusEl.innerHTML = `[Debug] ${dbgMsg}<br><textarea style="width:100%;height:40px;font-size:10px;">${url.toString()}</textarea>`;
+                    }
                 };
 
                 script.src = url.toString();
