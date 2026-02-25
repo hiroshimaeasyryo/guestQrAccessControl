@@ -543,9 +543,13 @@
 
                 Object.entries(params).forEach(([k, v]) => {
                     if (v !== undefined && v !== null) {
-                        url.searchParams.append(k, v);
+                        // モバイル対策1: データ（特に日本語やQRコードの中身）を安全にURLエンコードする
+                        url.searchParams.append(k, encodeURIComponent(v));
                     }
                 });
+
+                // モバイル対策2: キャッシュを強制回避するため、ランダムなタイムスタンプパラメータを付与
+                url.searchParams.append('_t', Date.now().toString());
 
                 const script = document.createElement('script');
                 script.id = callbackName;
